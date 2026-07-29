@@ -1,0 +1,28 @@
+services:
+  palworld:
+    image: thijsvanloef/palworld-server-docker:latest
+    restart: unless-stopped
+    stop_grace_period: 30s
+    ports:
+      - "15120:15120/udp"
+      - "27015:27015/udp"
+    environment:
+      PUID: 1000
+      PGID: 1000
+      PORT: 15120
+      PLAYERS: 8
+      PUBLIC_IP: "${PUBLIC_IP}"
+      PUBLIC_PORT: 15120
+      COMMUNITY: false
+      SERVER_NAME: "Sqxirt's Server"
+      MULTITHREADING: true
+      RCON_ENABLED: true
+      RCON_PORT: 25575
+      TZ: "America/New_York"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
+      SERVER_PASSWORD: "${SERVER_PASSWORD}"
+      BASE_CAMP_WORKER_MAX_NUM: 999
+      BASE_CAMP_MAX_NUM_IN_GUILD: 999
+      AUTO_SAVE_SPAN: 300
+    volumes:
+      - ./palworld-data:/palworld/

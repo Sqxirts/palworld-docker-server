@@ -1,0 +1,19 @@
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+*.log
+*.db
+*.sqlite3
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.DS_Store
+backups/
+*.bak
+
+# Live game server data — not source, not meant for git
+palworld-data/

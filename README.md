@@ -13,14 +13,21 @@ Wanted a persistent, low-maintenance game server for friends that didn't depend 
 - Docker / Docker Compose
 - [`thijsvanloef/palworld-server-docker`](https://github.com/thijsvanloef/palworld-server-docker) image
 - Proxmox LXC container (Ubuntu 24.04) for isolation from other homelab services
-- RCON for remote admin access
+- REST API (`:8212`) for remote admin and monitoring; RCON (`:25575`) kept enabled as a legacy fallback
 
 ## What it demonstrates
 
 - **Secrets management**: credentials and public-facing config are injected via `.env` at runtime, never hardcoded in version control.
 - **Service isolation**: the server runs in its own LXC container, separate from other homelab workloads, limiting blast radius if the container is compromised.
-- **Infrastructure as code**: the entire service is reproducible from a single `docker-compose.yml` plus an `.env` file.
-- **Operational hygiene**: automated save backups, `restart: unless-stopped` for resilience across host reboots.
+- **Infrastructure as code**: the entire service is reproducible from a single `docker-compose.yml` plus an `.env` file. All game settings live here as environment variables rather than in a hand-edited config file — see the note below on why that isn't optional.
+- **Least-exposure networking**: only the two UDP game ports are reachable from the internet. The admin surfaces (REST API, RCON) are bound to the LAN IP rather than `0.0.0.0`, since both authenticate over plaintext HTTP and grant full server control.
+- **Operational hygiene**: automated save backups, `restart: unless-stopped` for resilience across host reboots, and a scheduled build-check that warns players in-game, saves, and backs up before applying a game update.
+
+## Note: config lives in environment variables, not the ini
+
+The upstream image regenerates `PalWorldSettings.ini` from environment variables on **every container start**, so editing that file directly is silently discarded on the next restart. Every game setting therefore belongs in `docker-compose.yml`. (`Engine.ini` is the opposite — it isn't regenerated, so manual edits there do persist.)
+
+Server performance is bound by a single main thread, not by core count, so `WORKER_THREADS_SERVER` is pinned explicitly rather than left to the image's default of `nproc --all` — inside an LXC that reports the *host's* thread count and oversubscribes the container.
 
 ## Setup
 

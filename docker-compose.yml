@@ -6,8 +6,8 @@ services:
     ports:
       - "15120:15120/udp"
       - "27015:27015/udp"
-      - "REDACTED-LAN-IP:8212:8212"   # REST API, LAN-bound only (Homepage dashboard)
-      - "REDACTED-LAN-IP:25575:25575"   # RCON, LAN-bound only (rcon-web-admin on CT 108)
+      - "${LAN_BIND_IP}:8212:8212"   # REST API, LAN-bound only (Homepage dashboard)
+      - "${LAN_BIND_IP}:25575:25575"   # RCON, LAN-bound only (rcon-web-admin on CT 108)
     environment:
       PUID: 1000
       PGID: 1000

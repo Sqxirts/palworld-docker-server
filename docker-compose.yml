@@ -21,8 +21,13 @@ services:
       TZ: "America/New_York"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       SERVER_PASSWORD: "${SERVER_PASSWORD}"
-      BASE_CAMP_WORKER_MAX_NUM: 999
-      BASE_CAMP_MAX_NUM_IN_GUILD: 999
+      BASE_CAMP_WORKER_MAX_NUM: 30
+      BASE_CAMP_MAX_NUM_IN_GUILD: 30
       AUTO_SAVE_SPAN: 300
     volumes:
       - ./palworld-data:/palworld/
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

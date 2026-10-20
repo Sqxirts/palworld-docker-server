@@ -1,46 +1,31 @@
 # Palworld Docker Server
 
-## What it is
+A Palworld dedicated server for friends, run with Docker Compose on my home Proxmox server in its own container, so it doesn't depend on my desktop being on.
 
-A containerized Palworld dedicated server running on a Proxmox LXC container, deployed via Docker Compose with all credentials externalized to environment variables.
+## What's in the repo
 
-## Why I built it
+- `docker-compose.yml`: the whole server definition, built on the [`thijsvanloef/palworld-server-docker`](https://github.com/thijsvanloef/palworld-server-docker) image
+- `.env.example`: the public IP, the LAN IP for admin ports, and the two passwords the server needs, kept out of the repo
 
-Wanted a persistent, low-maintenance game server for friends that didn't depend on my desktop being on, and that I could rebuild from scratch in minutes if the container or host ever needed to be reprovisioned. Runs on my homelab (a Dell R630 running Proxmox) alongside other isolated services.
+## Choices worth noting
 
-## Tech stack
+- **Settings live in environment variables only.** This image regenerates the game's settings file (`PalWorldSettings.ini`) on every start, so edits to that file get silently wiped. Every setting is in `docker-compose.yml` instead.
+- **Passwords outside the code.** Admin and join passwords come from a gitignored `.env` file.
+- **Admin ports stay on the home network.** Only the two game ports (UDP 15120 for players, 27015 for Steam's server query) are open to the internet. The REST API (8212) and RCON (25575) are bound to the LAN IP, not every interface, because both send passwords in plaintext and give full control of the server.
+- **Worker threads set by hand.** Left unset, the image sizes its thread pool from `nproc --all`, which inside a Proxmox container reports the *host's* 32 threads instead of the container's 8 CPUs. The server oversubscribed itself until I pinned `WORKER_THREADS_SERVER: 8`.
+- **Logs capped** at 3 files of 10 MB each, so a chatty server can't fill the disk.
+- **Autosave every 5 minutes** (`AUTO_SAVE_SPAN: 300`; 30 seconds caused hitching), and a 30-second grace period on shutdown so the last save finishes.
 
-- Docker / Docker Compose
-- [`thijsvanloef/palworld-server-docker`](https://github.com/thijsvanloef/palworld-server-docker) image
-- Proxmox LXC container (Ubuntu 24.04) for isolation from other homelab services
-- REST API (`:8212`) for remote admin and monitoring; RCON (`:25575`) kept enabled as a legacy fallback
+## Run it
 
-## What it demonstrates
+```bash
+cp .env.example .env    # then fill in real values
+docker compose up -d
+```
 
-- **Secrets management**: credentials and public-facing config are injected via `.env` at runtime, never hardcoded in version control.
-- **Service isolation**: the server runs in its own LXC container, separate from other homelab workloads, limiting blast radius if the container is compromised.
-- **Infrastructure as code**: the entire service is reproducible from a single `docker-compose.yml` plus an `.env` file. All game settings live here as environment variables rather than in a hand-edited config file — see the note below on why that isn't optional.
-- **Least-exposure networking**: only the two UDP game ports are reachable from the internet. The admin surfaces (REST API, RCON) are bound to the LAN IP rather than `0.0.0.0`, since both authenticate over plaintext HTTP and grant full server control.
-- **Operational hygiene**: automated save backups, `restart: unless-stopped` for resilience across host reboots, and a scheduled build-check that warns players in-game, saves, and backs up before applying a game update.
+Game data persists in `./palworld-data`, which is gitignored.
 
-## Note: config lives in environment variables, not the ini
+## Known limits
 
-The upstream image regenerates `PalWorldSettings.ini` from environment variables on **every container start**, so editing that file directly is silently discarded on the next restart. Every game setting therefore belongs in `docker-compose.yml`. (`Engine.ini` is the opposite — it isn't regenerated, so manual edits there do persist.)
-
-Server performance is bound by a single main thread, not by core count, so `WORKER_THREADS_SERVER` is pinned explicitly rather than left to the image's default of `nproc --all` — inside an LXC that reports the *host's* thread count and oversubscribes the container.
-
-## Setup
-
-1. Copy `.env.example` to `.env` and fill in real values:
-   ```bash
-   cp .env.example .env
-   ```
-2. Start the server:
-   ```bash
-   docker compose up -d
-   ```
-3. Game data persists in `./palworld-data` (gitignored — this is runtime state, not source).
-
-## Screenshots / diagrams
-
-None yet — could add a homelab network diagram showing how this container fits alongside other services (Proxmox host → LXC → Docker → game server).
+- The image is pinned to `latest`, so a rebuild can pull a newer version. Pin a tag if you need exact rebuilds.
+- The generated settings file inside the container still holds the passwords in plaintext.

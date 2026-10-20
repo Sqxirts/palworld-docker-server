@@ -6,8 +6,8 @@ services:
     ports:
       - "15120:15120/udp"
       - "27015:27015/udp"
-      - "${LAN_BIND_IP}:8212:8212"   # REST API, LAN-bound only (Homepage dashboard)
-      - "${LAN_BIND_IP}:25575:25575"   # RCON, LAN-bound only (rcon-web-admin on CT 108)
+      - "${LAN_BIND_IP}:8212:8212"  # REST API, LAN only
+      - "${LAN_BIND_IP}:25575:25575"  # RCON, LAN only
     environment:
       PUID: 1000
       PGID: 1000
@@ -27,7 +27,7 @@ services:
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       SERVER_PASSWORD: "${SERVER_PASSWORD}"
       BASE_CAMP_WORKER_MAX_NUM: 30
-      BASE_CAMP_MAX_NUM_IN_GUILD: 4
+      BASE_CAMP_MAX_NUM_IN_GUILD: 8
       AUTO_SAVE_SPAN: 300
       DEATH_PENALTY: None
       ALLOW_GLOBAL_PALBOX_EXPORT: true
@@ -39,5 +39,11 @@ services:
       ITEM_CORRUPTION_MULTIPLIER: 0.500000
       COLLECTION_DROP_RATE: 2.000000
       EXP_RATE: 2.000000
+      EQUIPMENT_DURABILITY_DAMAGE_RATE: 0.000000
     volumes:
       - ./palworld-data:/palworld/
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -6,6 +6,8 @@ services:
     ports:
       - "15120:15120/udp"
       - "27015:27015/udp"
+      - "${LAN_BIND_IP}:8212:8212"  # REST API, LAN only
+      - "${LAN_BIND_IP}:25575:25575"  # RCON, LAN only
     environment:
       PUID: 1000
       PGID: 1000
@@ -15,14 +17,33 @@ services:
       PUBLIC_PORT: 15120
       COMMUNITY: false
       SERVER_NAME: "Sqxirt's Server"
-      MULTITHREADING: true
+      ENABLE_PERF_THREADING_ARGS: true
+      WORKER_THREADS_SERVER: 8
+      PHYSICS_ACTIVE_DROP_ITEM_MAX_NUM: 200
+      DROP_ITEM_MAX_NUM: 1000
       RCON_ENABLED: true
       RCON_PORT: 25575
-      TZ: "America/New_York"
+      TZ: "America/Phoenix"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD}"
       SERVER_PASSWORD: "${SERVER_PASSWORD}"
-      BASE_CAMP_WORKER_MAX_NUM: 999
-      BASE_CAMP_MAX_NUM_IN_GUILD: 999
+      BASE_CAMP_WORKER_MAX_NUM: 30
+      BASE_CAMP_MAX_NUM_IN_GUILD: 8
       AUTO_SAVE_SPAN: 300
+      DEATH_PENALTY: None
+      ALLOW_GLOBAL_PALBOX_EXPORT: true
+      ALLOW_GLOBAL_PALBOX_IMPORT: true
+      PAL_EGG_DEFAULT_HATCHING_TIME: 0.000278
+      PAL_SPAWN_NUM_RATE: 1.750000
+      PAL_STOMACH_DECREASE_RATE: 0.700000
+      BUILD_OBJECT_DAMAGE_RATE: 0.000000
+      ITEM_CORRUPTION_MULTIPLIER: 0.500000
+      COLLECTION_DROP_RATE: 2.000000
+      EXP_RATE: 2.000000
+      EQUIPMENT_DURABILITY_DAMAGE_RATE: 0.000000
     volumes:
       - ./palworld-data:/palworld/
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
